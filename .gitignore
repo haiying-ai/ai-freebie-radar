@@ -1,0 +1,25 @@
+# 依赖
+node_modules/
+
+# 私有配置（含密钥，切勿提交！请复制 config.example.json 填写）
+config.json
+.env
+.env.*
+
+# 运行数据 / 本地产物
+*.log
+tmp/
+.tmpcheck/
+.workbuddy/
+*.genie
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store
+
+# 本项目私有内容（不参与开源仓库）
+article-images/
+海报-*.png
+公众号文章-*.md
+灵感社区收录推荐材料.md

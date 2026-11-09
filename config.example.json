@@ -1,0 +1,14 @@
+{
+  "cloud": {
+    "endpoint": "https://<你的应用域名>",
+    "oauthRelayBaseUrl": "<云服务 OAuth 中转地址>",
+    "publishableKey": "<云服务 publishable key>"
+  },
+  "secret": "<服务端密钥：自己生成一段随机字符串，用于 /api/sync 和后台鉴权>",
+  "shareCode": "<网关分享码：前端访问链接需要带的 sharecode>",
+  "sync": {
+    "hour": 9,
+    "minute": 30,
+    "enable": true
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "ai-credit-hub",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AI资源白嫖雷达 - 云端常驻服务（定时同步 + 收录申请审批）",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@tencent-ai/workbuddy-cloud-sdk": "dev",
+    "qrcode": "^1.5.4"
+  }
+}
