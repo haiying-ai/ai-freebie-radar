@@ -50,7 +50,7 @@ button{border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font-size:1
 
 <div class="card">
   <h2>收录申请通知</h2>
-  <div class="row">通知方式：邮件助理自动发送至 <b>bingsun2020@163.com</b></div>
+  <div class="row">通知方式：邮件助理自动发送至服务端配置的管理员邮箱（环境变量 <code>ALERT_EMAIL</code>）</div>
   <p class="hint">流程：用户提交申请 → 邮件助理把申请详情发到你的邮箱 → 你直接回复「同意」或「拒绝」，或点邮件里的按钮，审批即刻生效。<br>
   如果暂时没收到邮件，也可以直接在下方列表里审批。</p>
 </div>
