@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: 语法与数据校验
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 所有脚本语法正确
+        run: |
+          fail=0
+          for f in *.js; do
+            echo "checking $f"
+            node --check "$f" || fail=1
+          done
+          exit $fail
+
+      - name: 数据文件是合法 JSON
+        run: |
+          fail=0
+          for f in $(git ls-files '*.json'); do
+            echo "validating $f"
+            node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || fail=1
+          done
+          exit $fail

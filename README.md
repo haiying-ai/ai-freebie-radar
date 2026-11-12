@@ -6,6 +6,7 @@
 
 [![在线体验](https://img.shields.io/badge/%F0%9F%9A%80-%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-7c5cff)](https://ai-credit-hub-44763.app.workbuddy.host/?sharecode=RIOZLFZCRN)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-339933)](https://nodejs.org/)
+[![CI](https://github.com/haiying-ai/ai-freebie-radar/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/haiying-ai/ai-freebie-radar/actions/workflows/ci.yml)
 [![Dependencies](https://img.shields.io/badge/dependencies-2-blue)](package.json)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
