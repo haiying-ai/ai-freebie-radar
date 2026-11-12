@@ -1,0 +1,42 @@
+name: 某个平台的数据抓取失效
+description: 某个 AI 平台的免费额度信息抓不到或明显过期
+labels: [data-source]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        各平台改版很频繁，这类反馈很有价值。请尽量提供准确信息，便于快速定位。
+  - type: input
+    id: platform
+    attributes:
+      label: 平台名称
+      placeholder: 例如 Cursor / Mistral / Together
+    validations:
+      required: true
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: 现象
+      options:
+        - 完全抓不到（条目消失）
+        - 抓到了但额度数字不对
+        - 抓到了但页面链接失效
+        - 免费额度已取消，应移除该平台
+        - 有新平台希望加入
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: 具体情况
+      description: 你看到的实际值，以及你认为正确的值；如有官方公告链接请附上
+    validations:
+      required: true
+  - type: textarea
+    id: page
+    attributes:
+      label: 数据来源页面
+      description: 该项目应从哪个地址读取这个平台的信息
+      placeholder: https://
+    validations:
+      required: false
