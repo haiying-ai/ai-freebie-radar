@@ -119,7 +119,7 @@ PORT=3000 node server.js
 
 > ⚠️ `config.json` 含密钥，已被 `.gitignore` 排除，**切勿提交到仓库**。生成随机密钥：`node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
 
-## ☁️ 部署
+## ☁ 部署
 
 ### 方式一：任意 Node 主机（VPS / 云服务器）
 
