@@ -4,13 +4,15 @@
 
 **每天自动核验更新 50+ AI 平台的免费额度，一页看全，到期自动下架。**
 
+*A daily-verified index of free AI credits, GPU compute, API tokens and video-generation quotas across 50+ platforms — expired offers are delisted automatically.*
+
 [![在线体验](https://img.shields.io/badge/%F0%9F%9A%80-%E5%9C%A8%E7%BA%BF%E4%BD%93%E9%AA%8C-7c5cff)](https://ai-credit-hub-44763.app.workbuddy.host/?sharecode=RIOZLFZCRN)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-339933)](https://nodejs.org/)
 [![CI](https://github.com/haiying-ai/ai-freebie-radar/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/haiying-ai/ai-freebie-radar/actions/workflows/ci.yml)
 [![Dependencies](https://img.shields.io/badge/dependencies-2-blue)](package.json)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-[在线体验](https://ai-credit-hub-44763.app.workbuddy.host/?sharecode=RIOZLFZCRN) · [功能特性](#-功能特性) · [快速开始](#-快速开始) · [部署](#-部署) · [API](#-api-一览) · [FAQ](#-faq)
+[在线体验](https://ai-credit-hub-44763.app.workbuddy.host/?sharecode=RIOZLFZCRN) · [功能特性](#-功能特性) · [快速开始](#-快速开始) · [部署](#-部署) · [API](#-api-一览) · [FAQ](#-faq) · [English](README.en.md)
 
 ![首页预览](docs/screenshots/01-home.png)
 
