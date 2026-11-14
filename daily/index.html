@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 资源日报 · 每日免费额度与白嫖活动汇总｜AI资源白嫖雷达</title>
+<meta name="description" content="每日更新 AI 免费资源日报：新增了哪些白嫖活动、哪些即将到期、哪些规则有变化，一篇看完。">
+<meta name="keywords" content="AI免费额度,免费算力,免费服务器,免费API,白嫖AI,AI资源攻略">
+<link rel="canonical" href="http://110.40.177.186/daily">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="AI资源白嫖雷达">
+<meta property="og:title" content="AI 资源日报 · 每日免费额度与白嫖活动汇总｜AI资源白嫖雷达">
+<meta property="og:description" content="每日更新 AI 免费资源日报：新增了哪些白嫖活动、哪些即将到期、哪些规则有变化，一篇看完。">
+<meta property="og:url" content="http://110.40.177.186/daily">
+<meta property="og:image" content="http://110.40.177.186/og-cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI 资源日报 · 每日免费额度与白嫖活动汇总｜AI资源白嫖雷达">
+<meta name="twitter:description" content="每日更新 AI 免费资源日报：新增了哪些白嫖活动、哪些即将到期、哪些规则有变化，一篇看完。">
+<meta name="twitter:image" content="http://110.40.177.186/og-cover.png">
+
+<style>
+  :root{--bg:#0b0f1a;--card:#151c2c;--border:#26304a;--text:#e6eaf2;--dim:#93a0b8;--accent:#6366f1;--cyan:#22d3ee;--green:#34d399;--orange:#fbbf24;--red:#f87171}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.75;min-height:100vh}
+  a{color:var(--cyan);text-decoration:none}
+  .wrap{max-width:820px;margin:0 auto;padding:0 20px}
+  header{border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;background:rgba(11,15,26,.9);backdrop-filter:blur(10px);z-index:10}
+  .nav{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--text)}
+  .logo span.r{font-size:18px}
+  .nav a.btn{border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--text);background:#151c2c}
+  main{padding:28px 0 60px}
+  .crumb{font-size:12.5px;color:var(--dim);margin-bottom:14px}
+  .crumb a{color:var(--dim)}
+  h1{font-size:26px;line-height:1.4;margin-bottom:12px;letter-spacing:-.3px}
+  .tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tag{font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(34,211,238,.12);color:#67e8f9;border:1px solid rgba(34,211,238,.25)}
+  .tag.plat{background:rgba(99,102,241,.14);color:#a5b4fc;border-color:rgba(99,102,241,.3)}
+  .tag.ok{background:rgba(52,211,153,.12);color:#6ee7b7;border-color:rgba(52,211,153,.3)}
+  .tag.exp,.tag.off{background:rgba(248,113,113,.12);color:#fca5a5;border-color:rgba(248,113,113,.28)}
+  .value{font-size:30px;font-weight:800;color:var(--green);margin:6px 0 16px;letter-spacing:-.5px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:16px}
+  .card h2{font-size:15px;margin-bottom:10px;color:var(--text)}
+  .card p{font-size:14.5px;color:#c3cbdb}
+  .rules{white-space:pre-line;font-size:14px;color:#c3cbdb}
+  .meta{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--dim);margin-top:14px}
+  .cta{display:block;text-align:center;background:linear-gradient(135deg,#6366f1,#22d3ee);color:#06121f;font-weight:800;padding:14px;border-radius:12px;font-size:15px;margin:20px 0 8px}
+  .cta.disabled{background:#26304a;color:#6b7793;pointer-events:none}
+  .note{font-size:12px;color:var(--dim);text-align:center;margin-bottom:22px}
+  .rel{list-style:none}
+  .rel li{padding:11px 0;border-bottom:1px solid #1e2740;font-size:14px;display:flex;justify-content:space-between;gap:12px}
+  .rel li:last-child{border-bottom:none}
+  .rel b{font-weight:600;color:var(--text)}
+  .rel em{font-style:normal;color:var(--green);font-size:13px;white-space:nowrap}
+  footer{border-top:1px solid var(--border);padding:22px 0;font-size:12.5px;color:var(--dim);text-align:center}
+  .digest-item{display:block;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:12px;transition:.2s}
+  .digest-item:hover{border-color:#3a4566}
+  .digest-item date{display:block;font-size:12px;color:var(--dim);margin-bottom:6px}
+  .digest-item b{display:block;font-size:16px;color:var(--text);margin-bottom:6px;line-height:1.5}
+  .digest-item p{font-size:13.5px;color:var(--dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .body{white-space:pre-line;font-size:15px;color:#cfd6e4}
+  .body b{color:var(--text)}
+  @media(max-width:640px){h1{font-size:21px}.value{font-size:25px}.wrap{padding:0 16px}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+  <a class="logo" href="/"><span class="r">📡</span>AI资源白嫖雷达</a>
+  <a class="btn" href="/">返回首页</a>
+</div></header>
+<main><div class="wrap"><div class="crumb"><a href="/">首页</a> / 日报</div>
+       <h1>AI 资源日报</h1>
+       <p style="color:var(--dim);font-size:14px;margin-bottom:20px">每天一篇，看完就知道今天又能白嫖什么。历史日报长期留存。</p>
+       
+    <a class="digest-item" href="/daily/2026-11-14">
+      <date>2026-11-14</date>
+      <b>AI资源日报11月14日：新增2个免费额度，明晚3场到期</b>
+      <p>今天巡检了 70 条活动，64 条还在进行中，新增 2 条。  【今日新增】 一是智谱 ZCode 的周末卡，5 亿 GLM-5.3-Flash Tokens，比工作日的每日 3 …</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-13">
+      <date>2026-11-13</date>
+      <b>AI资源日报11月13日：360纳米Work送1亿Token</b>
+      <p>今天是11月13日，雷达在库活动62条，覆盖50多个平台，今天新增1个，还有4个高价值活动进入最后一周倒计时。  【今日新增】360纳米Work：360旗下的AI智能体办公平台，接…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-12">
+      <date>2026-11-12</date>
+      <b>AI资源日报11月12日：新增2个免费算力，4个活动快截止</b>
+      <p>今天库里 67 条活动，61 条还能领，4 条过期、2 条下架。今天新增 2 条，都跟算力有关。  【今日新增】 1、阿里云云工开物：国内高校生做完学生认证，每年可以领一张 300…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-11">
+      <date>2026-11-11</date>
+      <b>AI资源日报11月11日：蚂蚁百灵限免两周，7个活动陆续截止</b>
+      <p>今天双11正日，也是各大平台双11福利的收官日。雷达目前监控61个可领活动，今日新增1个，未来7天内有7个活动陆续到期，该领的抓紧。 【今日新增】蚂蚁百灵Ling-3.2-flas…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-10">
+      <date>2026-11-10</date>
+      <b>AI资源日报11月10日：AutoClaw再送5000万</b>
+      <p>今天库里 64 个活动，60 个还能领，覆盖 53 个平台。双 11 最后一波就在这两天。  【今日新增】 英伟达 NIM：45 个免费 API 端点，DeepSeek-V4.1-…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-09">
+      <date>2026-11-09</date>
+      <b>AI资源日报11月9日：记者节积分+腾讯50万Token网关</b>
+      <p>今天巡了 62 条活动，56 条还能领，2 条到期自动下架。  【今日新增】 1、WorkBuddy 记者节：认证新闻工作者在「记者之家」大学堂或 WorkBuddy 小程序核验记…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-08">
+      <date>2026-11-08</date>
+      <b>AI资源日报11月8日：超算双11词元不限量，SCNet回归</b>
+      <p>今天监控的55个活动里，来了1个新面孔，还有1位老朋友带着新活动回归。先说腾讯云Cloud Studio：云端IDE标准版每月送1万分钟开发时长，再送1万分钟GPU时长（T4 16…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-07">
+      <date>2026-11-07</date>
+      <b>AI资源日报11月7日：教师每月2000积分连发12个月</b>
+      <p>今天是11月7日，雷达监控的56个免费AI资源里，54个处于可领状态，整体风平浪静，但教师朋友有个大福利别错过。【今日新增】腾讯WorkBuddy教育公益版：面向全国在职教师，每月…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-06">
+      <date>2026-11-06</date>
+      <b>AI资源日报11月6日：新增4个免费活动，2个后天截止</b>
+      <p>今天雷达照常巡检了54个在库活动，目前还有55个可领，今天新增4个，其中两个后天就截止，先说加急的。【今日新增】一、智谱AutoClaw：登录客户端即领5000万Token，但11…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-05">
+      <date>2026-11-05</date>
+      <b>AI资源日报11月5日：美团LongCat白送1000万Token</b>
+      <p>今天照常扫了一遍全库，一共监控53个活动，其中50个还能领，今天新增1条、更新4条。今日新增：美团LongCat开放平台，新用户注册并完成实名认证后自动发放1000万Tokens资…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-04">
+      <date>2026-11-04</date>
+      <b>AI资源日报11月4日：支付宝黑客松20+平台额度可领</b>
+      <p>今天是11月4日，雷达在监控的52个活动里，51个还能正常领，今天新增1个，先看重点。【今日新增】支付宝AI付的PAYATHON 2026年度黑客松：报名就解锁一批伙伴新用户额度，…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-03">
+      <date>2026-11-03</date>
+      <b>AI资源日报11月3日：新增2个免费额度，Trae宝限免一周</b>
+      <p>站点今天一共监控 52 个免费活动，49 个还在进行中，覆盖 43 个平台。整体变化不大，来了两个新面孔，其中一个五天后就结束。  【今日新增】 · 移动云 MoMA｜新用户 25…</p>
+    </a>
+    <a class="digest-item" href="/daily/2026-11-02">
+      <date>2026-11-02</date>
+      <b>AI 资源日报 11 月 2 日：新增 4 个免费活动，百度飞桨 AI Studio「每日登录送算力 · V100/A100 免费GPU」值得先领</b>
+      <p>今天站点共监控 50 个免费活动，其中 47 个仍在进行中，覆盖 42 个平台。  【今日新增】 · 百度飞桨 AI Studio｜每日登录送算力 · V100/A100 免费GP…</p>
+    </a>
+       <p style="margin-top:20px"><a href="/">← 查看全部免费活动</a></p></div></main><footer><div class="wrap">AI资源白嫖雷达 · 仅聚合官方公开的免费活动，不售卖账号、不代充 · 活动规则以官方页面为准</div></footer>
