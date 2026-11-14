@@ -23,3 +23,11 @@ article-images/
 海报-*.png
 公众号文章-*.md
 灵感社区收录推荐材料.md
+
+# EdgeOne 构建产物（pages 分支由脚本推送）
+edgeone-dist/
+
+# 个人运营内容（不参与开源仓库）
+xiyu-output/
+小红书分享/
+小红书账号装修方案.md

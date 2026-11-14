@@ -158,6 +158,7 @@ async function runSync(reason = 'cron') {
     }
     lastSyncAt = Date.now()
     lastSyncSummary = report
+    dbCache.clear() // 数据已变化，清空内存缓存
     // 同步完成后生成当日日报（推文草稿），失败不影响同步结果
     report.digest = await buildDailyDigest(report)
     log('[sync] 完成', JSON.stringify(report), `${(Date.now() - started) / 1000}s`)
@@ -326,10 +327,14 @@ async function visitStats() {
   let realToday = 0
   let realTotal = 0
   try {
-    const { data, error } = await cloud.database.from('site_stats').select('day,pv').limit(1000)
-    if (error) throw new Error(error.message)
+    // 60 秒内存缓存：前端轮询频繁，避免每次都全量查库
+    const data = await cached('site_stats', 60_000, async () => {
+      const { data, error } = await cloud.database.from('site_stats').select('day,pv').limit(1000)
+      if (error) throw new Error(error.message)
+      return data || []
+    })
     const tk = dayKeyOf()
-    for (const r of data || []) {
+    for (const r of data) {
       const pv = Number(r.pv || 0)
       realTotal += pv
       if (String(r.day).slice(0, 10) === tk) realToday += pv
@@ -366,6 +371,17 @@ function readBody(req, limit = 32 * 1024) {
 }
 
 const submitHits = new Map()
+
+// ---- 数据库读缓存：热点页面内存缓存，降低云资源点消耗（同步/写入时 clear()）----
+const dbCache = new Map() // key -> { at, value }
+async function cached(key, ttlMs, loader) {
+  const hit = dbCache.get(key)
+  if (hit && Date.now() - hit.at < ttlMs) return hit.value
+  const value = await loader()
+  dbCache.set(key, { at: Date.now(), value })
+  return value
+}
+
 function rateLimited(ip) {
   const now = Date.now()
   const last = submitHits.get(ip) || 0
@@ -443,22 +459,24 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // 站点地图：首页 + 所有活动详情页 + 所有日报
+    // 站点地图：首页 + 所有活动详情页 + 所有日报（10 分钟内存缓存）
     if (p === '/sitemap.xml') {
-      const [{ data: acts }, { data: digs }] = await Promise.all([
-        cloud.database.from('activities').select('id,last_updated').limit(500),
-        cloud.database.from('daily_digest').select('digest_date,updated_at').limit(180),
-      ])
-      const urls = [
-        { loc: absUrl('/'), lastmod: new Date().toISOString(), priority: '1.0', freq: 'daily' },
-        { loc: absUrl('/daily'), lastmod: new Date().toISOString(), priority: '0.8', freq: 'daily' },
-        ...(acts || []).map(a => ({ loc: absUrl(`/a/${a.id}`), lastmod: a.last_updated || new Date().toISOString(), priority: '0.7', freq: 'weekly' })),
-        ...(digs || []).map(d => ({ loc: absUrl(`/daily/${String(d.digest_date).slice(0, 10)}`), lastmod: d.updated_at || new Date().toISOString(), priority: '0.6', freq: 'monthly' })),
-      ]
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      const xml = await cached('sitemap', 600_000, async () => {
+        const [{ data: acts }, { data: digs }] = await Promise.all([
+          cloud.database.from('activities').select('id,last_updated').limit(500),
+          cloud.database.from('daily_digest').select('digest_date,updated_at').limit(180),
+        ])
+        const urls = [
+          { loc: absUrl('/'), lastmod: new Date().toISOString(), priority: '1.0', freq: 'daily' },
+          { loc: absUrl('/daily'), lastmod: new Date().toISOString(), priority: '0.8', freq: 'daily' },
+          ...(acts || []).map(a => ({ loc: absUrl(`/a/${a.id}`), lastmod: a.last_updated || new Date().toISOString(), priority: '0.7', freq: 'weekly' })),
+          ...(digs || []).map(d => ({ loc: absUrl(`/daily/${String(d.digest_date).slice(0, 10)}`), lastmod: d.updated_at || new Date().toISOString(), priority: '0.6', freq: 'monthly' })),
+        ]
+        return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc><lastmod>${new Date(u.lastmod).toISOString().slice(0, 10)}</lastmod><changefreq>${u.freq}</changefreq><priority>${u.priority}</priority></url>`).join('\n')}
 </urlset>`
+      })
       res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' })
       return res.end(xml)
     }
@@ -469,37 +487,42 @@ ${urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc><lastmod>${new Date(u.las
       return res.end(txt)
     }
 
-    // 活动详情页（每活动一个 SEO 落地页）
+    // 活动详情页（每活动一个 SEO 落地页，5 分钟内存缓存）
     const actMatch = p.match(/^\/a\/(\d+)\/?$/)
     if (actMatch && req.method === 'GET') {
       const id = Number(actMatch[1])
-      const { data: rows } = await cloud.database.from('activities').select('*').eq('id', id).limit(1)
-      const a = rows?.[0]
-      if (!a) {
+      const html = await cached(`page_a_${id}`, 300_000, async () => {
+        const { data: rows } = await cloud.database.from('activities').select('*').eq('id', id).limit(1)
+        const a = rows?.[0]
+        if (!a) return null
+        const { data: relRows } = await cloud.database.from('activities')
+          .select('id,platform,title,credit_value,category,status').eq('status', 'active').limit(200)
+        const related = (relRows || [])
+          .filter(r => r.id !== a.id && (!a.category || r.category === a.category))
+          .slice(0, 5)
+        return activityPage(a, {
+          related,
+          canonical: absUrl(`/a/${a.id}`),
+          ogImage: OG_IMAGE(),
+          homeUrl: absUrl('/'),
+        })
+      })
+      if (html === null) {
         res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' })
         return res.end(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>活动不存在</title></head><body style="background:#0b0f1a;color:#e6eaf2;font-family:sans-serif;text-align:center;padding:80px"><h2>活动不存在或已移除</h2><p><a href="${escapeHtml(absUrl('/'))}" style="color:#22d3ee">返回首页</a></p></body></html>`)
       }
-      const { data: relRows } = await cloud.database.from('activities')
-        .select('id,platform,title,credit_value,category,status').eq('status', 'active').limit(200)
-      const related = (relRows || [])
-        .filter(r => r.id !== a.id && (!a.category || r.category === a.category))
-        .slice(0, 5)
-      const html = activityPage(a, {
-        related,
-        canonical: absUrl(`/a/${a.id}`),
-        ogImage: OG_IMAGE(),
-        homeUrl: absUrl('/'),
-      })
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=600' })
       return res.end(html)
     }
 
-    // 日报列表
+    // 日报列表（5 分钟内存缓存）
     if (p === '/daily' || p === '/daily/') {
-      const { data } = await cloud.database.from('daily_digest')
-        .select('digest_date,title,body').order('digest_date', { ascending: false }).limit(60)
-      const html = dailyIndexPage(data || [], {
-        canonical: absUrl('/daily'), ogImage: OG_IMAGE(), homeUrl: absUrl('/'),
+      const html = await cached('page_daily', 300_000, async () => {
+        const { data } = await cloud.database.from('daily_digest')
+          .select('digest_date,title,body').order('digest_date', { ascending: false }).limit(60)
+        return dailyIndexPage(data || [], {
+          canonical: absUrl('/daily'), ogImage: OG_IMAGE(), homeUrl: absUrl('/'),
+        })
       })
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' })
       return res.end(html)
@@ -531,9 +554,12 @@ ${urls.map(u => `  <url><loc>${escapeHtml(u.loc)}</loc><lastmod>${new Date(u.las
 
     // 活动列表（服务端代理，浏览器无需直连）
     if (p === '/api/activities' && req.method === 'GET') {
-      const { data, error } = await cloud.database.from('activities').select('*').order('last_updated', { ascending: false }).limit(300)
-      if (error) return sendJson(res, 500, { error: error.message })
-      return sendJson(res, 200, { data: data || [], syncedAt: lastSyncAt ? new Date(lastSyncAt).toISOString() : null })
+      const rows = await cached('activities_all', 60_000, async () => {
+        const { data, error } = await cloud.database.from('activities').select('*').order('last_updated', { ascending: false }).limit(300)
+        if (error) throw new Error(error.message)
+        return data || []
+      })
+      return sendJson(res, 200, { data: rows, syncedAt: lastSyncAt ? new Date(lastSyncAt).toISOString() : null })
     }
 
     // 访问统计：新会话 +1（前端用 sessionStorage 判定，刷新不重复、关闭重开计新会话）

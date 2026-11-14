@@ -388,9 +388,13 @@
     } catch (e) { /* 统计失败不影响页面使用 */ }
   }
   trackVisit()
-  setInterval(async () => {
+  // 统计轮询：5 分钟一次，页面切到后台/闲置 30 分钟后停止（降低云资源点消耗）
+  let visitPolls = 0
+  const visitTimer = setInterval(async () => {
+    if (document.hidden) return
+    if (++visitPolls > 6) return clearInterval(visitTimer) // 30 分钟后停止轮询
     try { renderVisit(await (await fetch(api('/api/stats'))).json()) } catch (e) {}
-  }, 60000)
+  }, 300000)
 
   function toast(msg, isErr) {
     const t = document.getElementById('toast')

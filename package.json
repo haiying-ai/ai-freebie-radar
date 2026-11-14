@@ -10,5 +10,10 @@
   "dependencies": {
     "@tencent-ai/workbuddy-cloud-sdk": "dev",
     "qrcode": "^1.5.4"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {
+    "canvas": "^3.2.3",
+    "puppeteer": "^25.17.0"
   }
 }
