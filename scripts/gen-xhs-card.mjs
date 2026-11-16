@@ -134,7 +134,17 @@ function maskTitle(t) {
     .trim()
 }
 
-const data = await getJSON(API)
+// 数据源：优先线上接口；数据库/接口不可用时回退本地对齐快照 data/activities.json
+let data
+try {
+  data = await getJSON(API)
+  if (!data || !Array.isArray(data.data)) throw new Error('响应结构异常')
+} catch (e) {
+  const localPath = new URL('../data/activities.json', import.meta.url)
+  if (!fs.existsSync(localPath)) throw new Error(`线上接口失败（${e.message}）且无本地快照 data/activities.json`)
+  console.error(`[xhs] 线上接口失败（${e.message}），使用本地快照 data/activities.json`)
+  data = JSON.parse(fs.readFileSync(localPath, 'utf8'))
+}
 const activities = data.data || []
 const liveStatus = a => a.status || 'active'
 const actives = activities.filter(a => liveStatus(a) === 'active')
