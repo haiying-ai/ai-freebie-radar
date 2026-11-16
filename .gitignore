@@ -26,6 +26,7 @@ article-images/
 
 # EdgeOne 构建产物（pages 分支由脚本推送）
 edgeone-dist/
+edgeone-upload/
 
 # 个人运营内容（不参与开源仓库）
 xiyu-output/

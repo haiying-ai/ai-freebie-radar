@@ -515,16 +515,27 @@
   }
 
   async function loadActivities() {
+    let j = null, fallback = false
     try {
       const r = await fetch(api('/api/activities'), { cache: 'no-store' })
-      const j = await r.json()
-      if (!r.ok || j.error) throw new Error(j.error || '加载失败')
-      activities = j.data || []
-      if (j.syncedAt) document.getElementById('syncTime').textContent = '最近同步 ' + timeAgo(j.syncedAt).replace('更新', '')
+      const body = await r.json()
+      if (!r.ok || body.error) throw new Error(body.error || '加载失败')
+      j = body
     } catch (e) {
-      document.getElementById('grid').innerHTML = '<div class="empty">活动数据加载失败：' + esc(e.message || '请稍后重试') + '（<a class="detail-link" href="javascript:loadActivities()">点此重试</a>）</div>'
-      return
+      // 接口不可用时回退到静态快照，避免整页报错
+      try {
+        const r2 = await fetch('data/activities.json', { cache: 'no-store' })
+        const b2 = await r2.json()
+        if (r2.ok && Array.isArray(b2.data) && b2.data.length) { j = b2; fallback = true }
+      } catch (e2) { /* 快照也取不到 */ }
+      if (!j) {
+        document.getElementById('grid').innerHTML = '<div class="empty">活动数据加载失败：' + esc(e.message || '请稍后重试') + '（<a class="detail-link" href="javascript:loadActivities()">点此重试</a>）</div>'
+        return
+      }
     }
+    activities = j.data || []
+    if (j.syncedAt) document.getElementById('syncTime').textContent =
+      (fallback ? '数据快照 ' : '最近同步 ') + timeAgo(j.syncedAt).replace('更新', '')
     renderStats()
     render()
   }

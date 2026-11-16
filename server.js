@@ -427,6 +427,15 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === '/favicon.ico') { res.writeHead(204); return res.end() }
 
+    // 静态数据快照：数据库不可用时前端回退读它
+    if (p.startsWith('/data/') && /\.(json|svg)$/i.test(p)) {
+      const file = path.join(__dirname, 'data', path.basename(p))
+      if (!fs.existsSync(file)) { res.writeHead(404); return res.end() }
+      const type = p.endsWith('.svg') ? 'image/svg+xml' : 'application/json; charset=utf-8'
+      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-cache' })
+      return res.end(fs.readFileSync(file))
+    }
+
     /* ---------- SEO 静态资源 ---------- */
     // 社交分享封面图（og:image）
     if (p === '/og-cover.png') {

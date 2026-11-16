@@ -2,7 +2,7 @@
 // 用法: node scripts/gen-xhs-card.mjs [YYYY-MM-DD] [--real]
 //   默认只输出代称（描述）版，这是唯一发布口径（明文版实测被判「推广其它平台」限流）：
 //     小红书分享/<日期>.png       ← 描述型定位（无品牌词），发布用
-//     小红书分享/<日期>-对照表.txt ← 一行短格式「1智谱，2阶跃星辰，…」，放评论区回复用
+//     小红书分享/<日期>-对照表.txt ← 一行短格式「1智谱，2阶跃星辰，…」，发布后自己发置顶评论用
 //   加 --real 额外输出 小红书分享/<日期>-明文.png（真实平台名），仅供自己核对，不发布
 import { createCanvas } from 'canvas'
 import fs from 'node:fs'
@@ -15,6 +15,8 @@ const API = `https://ai-credit-hub-44763.app.workbuddy.host/api/activities?share
 function getJSON(url) {
   return new Promise((resolve, reject) => {
     https.get(url, { headers: { 'User-Agent': 'xhs-card-gen' } }, res => {
+      // 必须按流解码：直接 buf += chunk 会逐块 toString，跨块被切断的多字节汉字会变成 �
+      res.setEncoding('utf8')
       let buf = ''
       res.on('data', d => (buf += d))
       res.on('end', () => {
@@ -60,6 +62,7 @@ const POS = [
   [/月之暗面|Kimi|Moonshot/, '长文本见长的大模型'],
   [/MiniMax|海螺|Hailuo/, '语音起家 · 多模态'],
   [/商汤|SenseNova|小浣熊/, '视觉AI四小龙之一'],
+  [/Loomy/i, '桌面AI办公搭子'],
   [/讯飞|星火|AStudio/, '语音识别起家的AI'],
   [/百度|千帆|文心|ERNIE|飞桨/, '搜索巨头 · 文心系'],
   [/美团|LongCat/, '外卖巨头旗下大模型'],
@@ -314,7 +317,7 @@ ctx.font = F(27, '700')
 ctx.fillText('🔔 每天早上更新，关注我不迷路', 122, fy + 44)
 ctx.fillStyle = '#ffb3c8'
 ctx.font = F(24)
-ctx.fillText(showReal ? '💬 有问题评论区问，看到就回' : '💬 想知道是哪家？评论区问编号，看到就回', 122, fy + 84)
+ctx.fillText(showReal ? '💬 更多免费额度见置顶评论' : '💬 编号对应哪家？见置顶评论', 122, fy + 84)
 
 // 免责（无链接）+ 自有开源项目水印（不写平台外链，仅署名）
 ctx.fillStyle = '#5b6780'
@@ -344,11 +347,12 @@ const m2 = render(false)
 fs.writeFileSync(out, m2.buf)
 console.log('OK(描述版) ->', out, `(${m2.picks.length} 条精选 / ${actives.length} 进行中 / ${platCnt} 平台)`)
 
-// 对照表：只给自己在评论区回复用，不随图发布
+// 对照表：发布后由用户自己发一条置顶评论贴出，不随图发布
 // 格式刻意压成一行「1智谱，2阶跃星辰，…」，方便直接复制粘贴到评论区
 SHOW_REAL = false
 {
-  const short = (p) => String(p || '').trim().split(/\s+/)[0]
+  // 压掉空格但保留全名，避免「讯飞 Loomy」与「讯飞星火」都缩成「讯飞」
+  const short = (p) => String(p || '').trim().replace(/\s+/g, '')
   const line = m2.picks.map((a, i) => `${i + 1}${/^\d/.test(short(a.platform)) ? ' ' : ''}${short(a.platform)}`).join('，')
   const side = path.join(outDir, `${dateTag}-对照表.txt`)
   fs.writeFileSync(side, line + '\n', 'utf8')

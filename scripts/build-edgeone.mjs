@@ -53,8 +53,19 @@ function dayOf(v) { return String(v || '').slice(0, 10) }
 async function main() {
   log('站点地址:', SITE_URL)
   log('拉取线上数据…')
-  const actsRes = await getJson(`${BACKEND}/api/activities?sharecode=${SHARE}`)
-  const digRes = await getJson(`${BACKEND}/api/digest?sharecode=${SHARE}`)
+  // 数据库被隔离时回退到本地对齐快照 data/*.json（由 scripts/align-data.mjs 生成）
+  async function getData(apiPath, localFile) {
+    try {
+      return await getJson(`${BACKEND}${apiPath}?sharecode=${SHARE}`)
+    } catch (e) {
+      const p = path.join(ROOT, localFile)
+      if (!fs.existsSync(p)) throw e
+      log(`线上接口失败（${e.message}），回退本地 ${localFile}`)
+      return JSON.parse(fs.readFileSync(p, 'utf8'))
+    }
+  }
+  const actsRes = await getData('/api/activities', 'data/activities.json')
+  const digRes = await getData('/api/digest', 'data/digests.json')
   const activities = Array.isArray(actsRes.data) ? actsRes.data : []
   const digests = (Array.isArray(digRes.data) ? digRes.data : []).filter(d => d && dayOf(d.digest_date))
   log(`活动 ${activities.length} 条 / 日报 ${digests.length} 篇`)
@@ -66,7 +77,10 @@ async function main() {
   let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')
   const BACKEND_HOST = new URL(BACKEND).host
   const SITE_HOST = new URL(SITE_URL).host
-  html = html.split(BACKEND_HOST).join(SITE_HOST).split(`?sharecode=${SHARE}`).join('')
+  // 先替换完整地址（连协议一起换），否则部署到 http 站点时会残留 https://<ip>
+  html = html.split(BACKEND).join(SITE_URL)
+  html = html.split(BACKEND_HOST).join(SITE_HOST)
+  html = html.split(`?sharecode=${SHARE}`).join('')
   write('index.html', html)
 
   /* ---------- 数据快照 ---------- */
