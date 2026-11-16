@@ -91,6 +91,7 @@
   .stat { text-align: center; }
   .stat b { display: block; font-size: 28px; color: var(--accent2); }
   .stat span { font-size: 13px; color: var(--text-dim); }
+  .stat-updated b { font-size: 18px; padding-top: 8px; }
 
   /* Toolbar */
   .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 24px 0; }
@@ -238,6 +239,27 @@
     .nav .logo span.txt { display: none; }
     .stats { gap: 24px; }
   }
+  /* 移动端响应式：只收窄屏，PC 端不受影响 */
+  @media (max-width: 640px) {
+    .container { padding: 0 14px; }
+    .hero { padding: 34px 0 22px; }
+    .hero p { font-size: 14.5px; }
+    /* 顶栏：缩按钮、藏「常见问题」（页内本就有 FAQ 锚点），防止横向溢出 */
+    .nav { gap: 8px; }
+    .nav-actions { gap: 8px; margin-left: auto; }
+    .nav-actions .btn { padding: 8px 12px; font-size: 13px; border-radius: 8px; }
+    .nav-actions a[href="#faq"] { display: none; }
+    /* 统计行：「最近更新」单独占一行居中，不与三个数字挤在一起 */
+    .stats .stat-updated { flex-basis: 100%; margin-top: 4px; }
+    .stats .stat-updated b { font-size: 14.5px; padding-top: 2px; }
+    /* 同步条：小屏只留状态点 + 快照时间，长文案隐藏避免难看换行 */
+    .sync-bar { flex-wrap: wrap; padding: 8px 4px 2px; row-gap: 2px; }
+    .sync-bar .sync-desc { display: none; }
+    /* 工具栏：搜索框占满一行 */
+    .toolbar { margin: 18px 0; gap: 10px; }
+    .toolbar .search { flex: 1 1 100%; min-width: 0; width: 100%; }
+    .toolbar select.search { flex: 1 1 30%; padding: 8px 6px; font-size: 13px; }
+  }
 </style>
 </head>
 <body>
@@ -262,9 +284,9 @@
       <div class="stat"><b id="statTotal">–</b><span>收录活动</span></div>
       <div class="stat"><b id="statActive">–</b><span>进行中</span></div>
       <div class="stat"><b id="statPlatforms">–</b><span>覆盖平台</span></div>
-      <div class="stat"><b id="statUpdated" style="font-size:18px; padding-top:8px;">–</b><span>最近更新</span></div>
+      <div class="stat stat-updated"><b id="statUpdated">–</b><span>最近更新</span></div>
     </div>
-    <div class="sync-bar"><span class="pulse"></span><span>服务端每日 09:30 自动同步 · 到期或下架的活动会同步更新状态</span><span id="syncTime"></span></div>
+    <div class="sync-bar"><span class="pulse"></span><span class="sync-desc">服务端每日 09:30 自动同步 · 到期或下架的活动会同步更新状态</span><span id="syncTime"></span></div>
     <div class="visit-line" id="visitLine" hidden>👁 今日 <b id="visitToday">–</b> 次访问 · 累计 <b id="visitTotal">–</b> 次</div>
     <div class="newbie-tip">
       <span class="tip-ico">💡</span>
