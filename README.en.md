@@ -38,6 +38,8 @@ A scheduled job verifies every listed offer once a day at 09:30 — it re-checks
 | Admin console | `/admin?key=<secret>` — pending queue, manual sync, stats |
 | Share poster | Client-side Canvas poster at 1080×1440 with QR code |
 | Daily digest | Auto-generated digest per sync run, archived by date |
+| Graceful degradation | When the database is unreachable, the frontend falls back to the static snapshot in `data/activities.json` — the page keeps working |
+| Static export | `scripts/build-edgeone.mjs` exports a fully static site (pre-rendered pages + edge functions + KV visit counter) ready for free hosting on EdgeOne Pages / GitHub Pages |
 | Zero framework | Native Node.js `http` server and vanilla frontend; 2 production dependencies |
 
 ## Quick start
@@ -54,11 +56,24 @@ npm start
 
 The server renders offer pages server-side and runs the sync job in-process. See [`config.example.json`](config.example.json) for every option.
 
+### Static hosting (EdgeOne Pages / GitHub Pages, free)
+
+```bash
+# Export the static site (fetches live API, falls back to the local snapshot in data/)
+EDGEONE_SITE_URL=https://your-domain node scripts/build-edgeone.mjs
+
+# Optionally push the build to a "pages" branch for Git-based import
+EDGEONE_SITE_URL=https://your-domain node scripts/build-edgeone.mjs --push
+```
+
+The output in `edgeone-dist/` contains pre-rendered offer pages, digest pages, `sitemap.xml` and V8 edge functions (`activities` / `stats` / `visit` / `submit` / `qr`) that serve the API and store visit counters in KV — so the site stays fully functional without any database.
+
 ## Design notes
 
 - **PostgreSQL with RLS on every table.** All writes go through `SECURITY DEFINER` functions that validate a server-side key, so the browser never holds write permission.
 - **Native `http`, no Express.** Offer and digest pages are server-rendered for search engines; the app shell is a single-file SPA with no CDN dependency, so it loads on weak networks.
 - **Verification is observable.** Every row stores its last-checked timestamp; the daily digest archive lets anyone confirm the data is actually fresh rather than trusting a badge.
+- **It degrades gracefully.** If the database goes away (quota exhausted, outage), the frontend automatically serves the last synced snapshot and a static export can run the whole site without a database.
 
 ## Scope and disclaimer
 

@@ -47,6 +47,8 @@
 | 🖼️ **分享海报** | 前端 Canvas 实时生成 1080×1440 分享海报（含二维码），`/api/qr` 生成任意二维码 |
 | 📅 **AI 资源日报** | 每日同步后自动生成日报草稿（`daily_digest` 表），按日期归档展示 |
 | 👁️ **访问量统计** | PV/UV 分账统计（会话去重 + 每日 UV），写入走数据库原子函数，前端不可篡改 |
+| 🧯 **数据降级兜底** | 数据库不可用时，前端自动回退 `data/activities.json` 静态快照，页面照常展示、不报错 |
+| 📦 **静态站导出** | `scripts/build-edgeone.mjs` 一键导出全静态站（详情页/日报/sitemap 预渲染 + 边缘函数 + KV 访问计数），可直接托管到 EdgeOne Pages、GitHub Pages 等免费平台，数据库挂了也不影响访问 |
 | 🧱 **零框架** | Node.js 原生 `http` 服务端 + 原生前端，生产依赖仅 2 个，部署即跑 |
 
 ## 📸 页面预览
@@ -84,7 +86,8 @@ flowchart LR
 
 - **数据层**：PostgreSQL，全表开启 RLS；所有写操作通过 `SECURITY DEFINER` 函数完成（带服务端密钥校验），前端无直接写权限
 - **服务端**：原生 `http`，无 Express；服务端渲染活动详情页与日报页（对搜索引擎友好）
-- **前端**：单文件 SPA，零外部 CDN 依赖，弱网也能加载
+- **前端**：单文件 SPA，零外部 CDN 依赖，弱网也能加载；接口失败时自动降级读静态快照
+- **静态托管形态**：构建时把活动/日报预渲染为 HTML（`edgeone-dist/`），API 由 V8 边缘函数承担（KV 存访问计数），实现「免费托管 + 数据库宕机可访问」
 
 ## 🚀 快速开始
 
@@ -134,11 +137,25 @@ PORT=3000 SVC_SECRET=<密钥> CLOUD_ENDPOINT=<接入点> ... pm2 start server.js
 
 国内服务器 + 自有域名 = 搜索引擎可正常抓取（子域网关托管时蜘蛛可能被 403，详见 FAQ）。
 
-### 方式二：Serverless / 容器平台（Railway / Render / Fly.io 等）
+### 方式二：静态托管（EdgeOne Pages / GitHub Pages 等，免费）
+
+```bash
+# 1. 导出全静态站（优先拉线上 API，失败自动回退 data/ 快照）
+EDGEONE_SITE_URL=https://你的域名 node scripts/build-edgeone.mjs
+#    产物在 edgeone-dist/：预渲染详情页 + 日报 + sitemap + 边缘函数（activities/stats/visit/submit/qr）
+
+# 2. 直接部署产物目录即可；若平台支持边缘函数（如 EdgeOne Pages），
+#    API 会由 edge-functions 承担，访问计数写入 KV（绑定变量名 my_kv）
+
+# 3. （可选）推送到仓库 pages 分支，供「导入 Git 仓库」类接入使用
+EDGEONE_SITE_URL=https://你的域名 node scripts/build-edgeone.mjs --push
+```
+
+### 方式三：Serverless / 容器平台（Railway / Render / Fly.io 等）
 
 配置环境变量（见上表）→ 启动命令 `node server.js` 即可。所有配置均可用环境变量注入，无需提交 config.json。
 
-### 方式三：WorkBuddy 应用
+### 方式四：WorkBuddy 应用
 
 在 WorkBuddy 对话中描述需求即可一键生成并发布同款应用，云数据库、定时任务、托管全部自动配置。
 
@@ -153,6 +170,7 @@ PORT=3000 SVC_SECRET=<密钥> CLOUD_ENDPOINT=<接入点> ... pm2 start server.js
 | GET | `/api/stats` | 访问统计（今日 / 累计） |
 | GET | `/api/digest` | 日报数据 |
 | GET | `/api/qr?text=` | 二维码 SVG |
+| GET | `/data/activities.json` `/data/digests.json` | 静态快照（数据库不可用时的前端兜底数据源） |
 | GET | `/api/health` `/api/diag` | 健康检查 / 诊断 |
 | POST | `/api/sync?key=<secret>` | 手动触发同步 |
 | GET | `/admin?key=<secret>` | 管理后台 |
@@ -162,12 +180,20 @@ PORT=3000 SVC_SECRET=<密钥> CLOUD_ENDPOINT=<接入点> ... pm2 start server.js
 
 ```
 ai-freebie-radar/
-├── server.js            # 服务端：API、SSR、定时同步（核心，约 700 行）
+├── server.js            # 服务端：API、SSR、定时同步（核心）
 ├── pages.js             # 服务端渲染：活动详情页 / 日报页 / head 模板
-├── index.html           # 前端 SPA（单文件，零 CDN 依赖）
+├── index.html           # 前端 SPA（单文件，零 CDN 依赖，接口失败自动读静态快照）
 ├── admin-page.js        # 管理后台页面
 ├── config.example.json  # 配置模板（复制为 config.json 后填写）
-├── scripts/             # 辅助脚本（海报生成 / 截图）
+├── data/                # 活动与日报的静态快照（前端兜底数据源，随同步更新）
+├── edgeone/functions/   # V8 边缘函数：activities / stats / visit / submit / qr（KV 计数）
+├── scripts/
+│   ├── build-edgeone.mjs   # 静态站导出（--push 可推送 pages 分支）
+│   ├── align-data.mjs      # 数据对齐：到期下线 / 链接巡检 / 权威延期修正
+│   ├── gen-xhs-card.mjs    # 社交媒体分享卡生成（1080×1440，内置数据源降级）
+│   ├── gen-poster-clean.mjs# 无二维码海报生成
+│   ├── verify-live.mjs     # 线上渲染验证（无头浏览器截图 + 错误检查）
+│   └── deploy-edgeone.mjs  # EdgeOne CLI 部署封装
 └── docs/screenshots/    # README 截图
 ```
 
@@ -203,8 +229,16 @@ ai-freebie-radar/
 前端展示值 = 历史基线 + 真实计数。真实 PV/UV 记录在 `site_stats` 表中（会话去重、每日 UV、蜘蛛过滤、防刷），可在后台查看原始数据。
 </details>
 
+<details>
+<summary><b>数据库挂了 / 额度用完了网站还能看吗？</b></summary>
+
+能。前端请求 `/api/activities` 失败时会自动回退到 `data/activities.json` 静态快照，页面正常展示（数据停留在最后一次同步）；静态托管形态下 API 由边缘函数承担，完全不依赖数据库。
+</details>
+
 ## 🛣️ Roadmap
 
+- [x] 静态托管形态：EdgeOne Pages / GitHub Pages 免费部署 + 边缘函数 API（已完成）
+- [x] 数据库不可用降级：静态快照兜底（已完成）
 - [ ] 活动订阅：邮件 / RSS 推送每日新增
 - [ ] 多语言界面
 - [ ] 活动卡片社交分享卡优化
