@@ -231,6 +231,18 @@
   .faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
   .faq-item b { display: block; margin-bottom: 4px; font-size: 14.5px; }
   .faq-item p { font-size: 13.5px; color: var(--text-dim); }
+  /* 一句话部署卡片 */
+  .deploy-box { background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(34,211,238,.08)); border: 1px solid var(--accent); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; }
+  .deploy-box b { display: block; margin-bottom: 6px; font-size: 15px; }
+  .deploy-box p { font-size: 13.5px; color: var(--text-dim); margin-bottom: 10px; }
+  .copy-line { display: flex; gap: 10px; align-items: stretch; }
+  .copy-line code {
+    flex: 1; background: rgba(11,15,26,.75); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; font-size: 12.5px; color: var(--accent2); line-height: 1.7;
+    word-break: break-all; font-family: ui-monospace, Consolas, monospace;
+  }
+  .copy-line .copy-btn { padding: 8px 16px; font-size: 13px; align-self: center; white-space: nowrap; }
+  .copy-line .copy-btn.ok { background: linear-gradient(135deg, #10b981, #34d399); }
   footer { border-top: 1px solid var(--border); padding: 28px 0 40px; color: var(--text-dim); font-size: 13px; }
   footer .container p { margin-bottom: 8px; }
 
@@ -249,6 +261,11 @@
     .nav-actions { gap: 8px; margin-left: auto; }
     .nav-actions .btn { padding: 8px 12px; font-size: 13px; border-radius: 8px; }
     .nav-actions a[href="#faq"] { display: none; }
+    .nav-actions .gh-txt { display: none; }
+    .nav-actions .gh-btn { padding: 8px 10px; }
+    /* 一句话部署卡片：小屏复制按钮换行 */
+    .copy-line { flex-direction: column; }
+    .copy-line .copy-btn { align-self: flex-end; }
     /* 统计行：「最近更新」单独占一行居中，不与三个数字挤在一起 */
     .stats .stat-updated { flex-basis: 100%; margin-top: 4px; }
     .stats .stat-updated b { font-size: 14.5px; padding-top: 2px; }
@@ -271,6 +288,7 @@
       <a class="btn btn-ghost" href="/daily" id="dailyLink">📅 日报</a>
       <button class="btn btn-ghost" onclick="openPoster()">📤 分享海报</button>
       <a class="btn btn-ghost" href="#faq">常见问题</a>
+      <a class="btn btn-ghost gh-btn" href="https://github.com/haiying-ai/ai-freebie-radar" target="_blank" rel="noopener"><span class="gh-ico">⭐</span><span class="gh-txt">GitHub</span></a>
       <button class="btn btn-primary" onclick="openSubmit()">＋ 申请收录</button>
     </div>
   </div>
@@ -313,6 +331,14 @@
 
   <section class="faq container" id="faq">
     <h2>常见问题</h2>
+    <div class="deploy-box" id="deploy">
+      <b>🚀 想在你自己的账号上部署一个一样的站？</b>
+      <p>项目已开源。把下面这句话发给你的 AI 工具（WorkBuddy 等都可以），它就能帮你完成私有化部署，并且每天早上自动扫描更新免费 AI 资源数据：</p>
+      <div class="copy-line">
+        <code id="deployPrompt">帮我私有化部署开源项目 https://github.com/haiying-ai/ai-freebie-radar（AI资源白嫖雷达），并配置每日定时任务，每天早上自动扫描更新免费 AI 资源数据后发布上线</code>
+        <button class="btn btn-primary copy-btn" onclick="copyDeploy(this)">复制</button>
+      </div>
+    </div>
     <div class="faq-item"><b>这里的活动是合法的吗？</b><p>本站只收录各平台官方渠道公开提供的签到、注册、认证、新用户体验等免费活动，不涉及任何代充、账号买卖、破解或违规脚本，领取行为完全遵守各平台官方规则。</p></div>
     <div class="faq-item"><b>积分是钱吗？</b><p>积分仅用于平台内 AI 任务资源消耗，非现金，通常有 30 天左右有效期，先到期的优先消耗，规则以各平台最新页面为准。</p></div>
     <div class="faq-item"><b>服务器、API 额度这类资源我不会用怎么办？</b><p>完全不用懂技术。它们是 AI 帮你开发网站和应用必不可少的资源：按活动规则领取后，把额度、密钥等信息直接发给 WorkBuddy 等 AI 助手即可，AI 会帮你配置好并开始干活（详见首页顶部的新手说明）。</p></div>
@@ -325,6 +351,7 @@
   <div class="container">
     <p><b>免责声明：</b>本站仅为信息聚合工具，不售卖任何账号、积分或代充服务，不参与任何交易。所有积分领取均发生在各官方平台，请遵守官方活动规则；活动内容、奖励数量与有效期以官方最新页面为准。</p>
     <p>AI资源白嫖雷达 · 让每一分免费 AI 资源都不被浪费</p>
+    <p>开源地址：<a href="https://github.com/haiying-ai/ai-freebie-radar" target="_blank" rel="noopener">github.com/haiying-ai/ai-freebie-radar</a> · MIT License · 部署方式见 <a href="#deploy">「一句话部署」</a></p>
   </div>
 </footer>
 
@@ -578,6 +605,30 @@
 
   // 收录申请
   function openSubmit() { document.getElementById('submitMask').classList.add('show') }
+  function copyDeploy(btn) {
+    const text = document.getElementById('deployPrompt').textContent.trim()
+    const done = ok => {
+      if (!btn) return
+      btn.textContent = ok ? '✓ 已复制' : '复制失败，请长按手动复制'
+      btn.classList.toggle('ok', ok)
+      setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('ok') }, 2200)
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => done(true), () => fallbackCopy(text) ? done(true) : done(false))
+    } else {
+      done(fallbackCopy(text))
+    }
+  }
+  function fallbackCopy(text) {
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'
+      document.body.appendChild(ta); ta.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(ta)
+      return ok
+    } catch { return false }
+  }
   function closeSubmit() { document.getElementById('submitMask').classList.remove('show') }
   document.getElementById('submitMask').addEventListener('click', e => { if (e.target === e.currentTarget) closeSubmit() })
 

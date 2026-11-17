@@ -44,6 +44,12 @@ A scheduled job verifies every listed offer once a day at 09:30 — it re-checks
 
 ## Quick start
 
+> ⚡ **One-sentence deploy (no coding needed)**
+>
+> This project is open source. Paste the following sentence into your AI assistant (WorkBuddy, etc.) and it will set up a private deployment for you, then refresh the data with an automated scan every morning:
+>
+> **"Help me privately deploy the open-source project https://github.com/haiying-ai/ai-freebie-radar (AI Freebie Radar), set up a daily scheduled job that scans and updates free AI resource data every morning, and publish it online."**
+
 Requires Node.js 18+ and a PostgreSQL database.
 
 ```bash

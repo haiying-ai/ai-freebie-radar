@@ -134,6 +134,31 @@ function maskTitle(t) {
     .trim()
 }
 
+// 2026-11-17 图片被判「推广其它平台」后加的营销词清洗层：
+// 把活动标题/额度里的推广式措辞（钜惠、福利、注册送、免费试用、付费套餐价等）改成中性表述
+function sanitize(s) {
+  let t = String(s || '')
+  t = t
+    .replace(/双11年终钜惠/g, '年末活动')
+    .replace(/双11每周福利/g, '每周一期')
+    .replace(/双11/g, '')
+    .replace(/钜惠/g, '活动')
+    .replace(/福利/g, '活动')
+    .replace(/成长福利/g, '成长计划')
+    .replace(/登录领/g, '含')
+    .replace(/签到领/g, '签到含')
+    .replace(/注册\s*(\d+)\s*永久积分/g, '$1 积分（永久）')
+    .replace(/新手任务/g, '任务奖励')
+    .replace(/免费试用/g, '体验')
+    .replace(/限时免费/g, '限定期限内可用')
+    .replace(/白送|白嫖/g, '')
+    .replace(/（\s*99元套餐\s*）|\(\s*99元套餐\s*\)/g, '')
+    .replace(/（\s*\d+元套餐\s*）|\(\s*\d+元套餐\s*\)/g, '')
+    .replace(/新用户/g, '初次使用')
+    .replace(/新客/g, '初次使用')
+  return t.replace(/\s{2,}/g, ' ').replace(/^[\s·、/／-]+/, '').replace(/（\s*）|\(\s*\)/g, '').trim()
+}
+
 // 数据源：优先线上接口；数据库/接口不可用时回退本地对齐快照 data/activities.json
 let data
 try {
@@ -200,13 +225,13 @@ ctx.beginPath(); ctx.arc(96, 132, 12, 0, Math.PI * 2); ctx.fill()
 // 标语（不写日期，避免长尾分发时显得过期）+ 标题
 ctx.fillStyle = '#ff5e8c'
 ctx.font = F(34, '800')
-ctx.fillText('每天早上更新 · 全网免费额度', 82, 208)
+ctx.fillText('每天早上更新 · AI资源信息汇总', 82, 208)
 ctx.fillStyle = '#ffffff'
 ctx.font = F(76, '800')
-ctx.fillText('今日AI白嫖情报', 82, 296)
+ctx.fillText('今日AI资源盘点', 82, 296)
 ctx.fillStyle = '#8b98b8'
 ctx.font = F(30)
-ctx.fillText('全部免费 · 官方活动 · 领完为止', 82, 352)
+ctx.fillText('信息汇总 · 规则以官方页面为准', 82, 352)
 
 // 数据条
 ctx.fillStyle = 'rgba(255,94,140,.13)'
@@ -227,7 +252,7 @@ ctx.fillStyle = '#ff5e8c'
 roundRect(ctx, 82, 552, 10, 36, 5); ctx.fill()
 ctx.fillStyle = '#ffffff'
 ctx.font = F(32, '700')
-ctx.fillText('今天值得领的', 106, 580)
+ctx.fillText('今天仍在进行', 106, 580)
 // 同平台只保留最新一条，避免一张图出现两个同名平台
 const pickedPlat = new Set()
 const picks = [...actives]
@@ -248,6 +273,24 @@ function clipW(ctx, s, maxW) {
   return out + '…'
 }
 
+// 当天到期角标：expires_at 为上海时区今天 → 该行右上角压红色角标
+function shanghaiParts(d) {
+  const f = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
+  const p = {}
+  for (const { type, value } of f.formatToParts(d)) p[type] = value
+  return p
+}
+function deadlineBadge(a) {
+  if (!a.expires_at) return null
+  const d = new Date(a.expires_at)
+  if (isNaN(d)) return null
+  const p = shanghaiParts(d)
+  const now = shanghaiParts(new Date())
+  const today = `${now.year}-${now.month}-${now.day}`
+  if (`${p.year}-${p.month}-${p.day}` !== today) return null
+  return `今日 ${p.hour}:${p.minute} 截止`
+}
+
 picks.forEach((a, i) => {
   const yy = 612 + i * 104
   ctx.fillStyle = 'rgba(255,255,255,.05)'
@@ -265,9 +308,9 @@ picks.forEach((a, i) => {
   ctx.fillText(clipW(ctx, pl.text, 460), 158, yy + 35)
   ctx.fillStyle = '#e6eaf2'
   ctx.font = F(26)
-  ctx.fillText(clipW(ctx, maskTitle(a.title), 470), 158, yy + 70)
+  ctx.fillText(clipW(ctx, sanitize(maskTitle(a.title)), 470), 158, yy + 70)
   // 额度（右侧按像素宽度自动折行，最多 3 行，尽量完整显示）
-  const credit = String(a.credit_value || '免费').replace(/\s+/g, ' ').trim()
+  const credit = sanitize(String(a.credit_value || '免费').replace(/\s+/g, ' ').trim())
   const CW = 330
   ctx.textAlign = 'right'
   ctx.font = F(22, '700')
@@ -313,6 +356,8 @@ picks.forEach((a, i) => {
     }
   }
   ctx.textAlign = 'left'
+  // 2026-11-17：红色「今日 HH:MM 截止」角标被平台审核判违规，永久禁用。
+  // 紧迫感类视觉元素（倒计时/截止角标）一律不上图，到期信息只写正文陈述句。
 })
 
 // 底部卡片：关注引导 + 互动钩子（无链接、无二维码）
