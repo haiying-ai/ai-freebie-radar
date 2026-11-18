@@ -80,6 +80,8 @@ const POS = [
   [/蚂蚁|百灵|Ling-|支付宝|PAYTHON/, '支付巨头旗下大模型'],
   [/微信|小程序/, '国民级社交App'],
   [/熙娱|xiyu/i, '第三方积分平台'],
+  [/MonkeyCode/i, '开源云端开发平台'],
+  [/CodeGeeX/i, '开源补全插件'],
   [/Cursor|Windsurf/, '海外AI编程IDE'],
   [/AutoDL|恒源云|智星云|趋动云|算力互联|蓝耘|揽睿/, 'GPU租用平台'],
   [/Coze|扣子/, '智能体搭建平台'],
