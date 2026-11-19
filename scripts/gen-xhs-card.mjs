@@ -52,35 +52,35 @@ const POS = [
   [/Hugging\s*Face/i, '海外开源模型社区'],
   [/GitCode|启智|OpenI|Gitee/, '国产开源社区'],
   [/Kaggle/, '数据竞赛社区'],
-  [/华为|CodeArts|码道/, '通信大厂 · 国产算力'],
-  [/360|纳米/, '安全软件起家的AI办公'],
-  [/小米|MiMo/, '手机厂旗下AI'],
+  [/华为|CodeArts|码道/, '国产算力 · 编程工具'],
+  [/360|纳米/, 'AI 办公助手'],
+  [/小米|MiMo/, '手机端 AI 助手'],
   [/Qwen\s*Code/i, '开源终端编程 Agent'],
   [/OpenCode/i, '免费模型池编程客户端'],
-  [/阿里|百炼|DashScope|通义|千问|Qwen|Qoder|云工开物|万相/, '头部云厂商 · 通义系'],
-  [/腾讯|混元|TokenHub|ADP|Cloud\s*Studio|EdgeOne|元器|WorkBuddy|CodeBuddy|BuddyOne/, '社交巨头旗下云'],
-  [/字节|豆包|即梦|Dreamina|火山|方舟|Seedance|Trae/, '短视频巨头旗下云'],
-  [/智谱|GLM|AutoClaw|ZCode|BigModel/, '清华系大模型 · 编程强'],
+  [/阿里|百炼|DashScope|通义|千问|Qwen|Qoder|云工开物|万相/, '头部云厂商 · 多模型 API'],
+  [/腾讯|混元|TokenHub|ADP|Cloud\s*Studio|EdgeOne|元器|WorkBuddy|CodeBuddy|BuddyOne/, '云厂商 · 模型与算力'],
+  [/字节|豆包|即梦|Dreamina|火山|方舟|Seedance|Trae/, '云厂商 · 视频生成'],
+  [/智谱|GLM|AutoClaw|ZCode|BigModel/, '国产大模型 · 编程强'],
   [/月之暗面|Kimi|Moonshot/, '长文本见长的大模型'],
   [/MiniMax|海螺|Hailuo/, '语音起家 · 多模态'],
-  [/商汤|SenseNova|小浣熊/, '视觉AI四小龙之一'],
+  [/商汤|SenseNova|小浣熊/, '视觉大模型'],
   [/Loomy/i, '桌面AI办公搭子'],
-  [/讯飞|星火|AStudio/, '语音识别起家的AI'],
-  [/百度|千帆|文心|ERNIE|飞桨/, '搜索巨头 · 文心系'],
-  [/美团|LongCat/, '外卖巨头旗下大模型'],
-  [/京东/, '电商巨头旗下大模型'],
-  [/快手|可灵|Kling/, '短视频平台的视频模型'],
+  [/讯飞|星火|AStudio/, '语音转写 AI'],
+  [/百度|千帆|文心|ERNIE|飞桨/, '大模型官方 · 对话'],
+  [/美团|LongCat/, '大模型官方 · 低价 API'],
+  [/京东/, '大模型官方 · 电商场景'],
+  [/快手|可灵|Kling/, 'AI 创作 · 视频生成'],
   [/七牛/, '云存储服务商'],
   [/移动云|MoMA|联通|电信|天翼/, '运营商云'],
   [/超算|SCNet/, '国家队超算平台'],
   [/硅基流动|SiliconFlow/, '模型聚合API站'],
   [/DeepSeek|深度求索/, '开源大模型 · 低价API'],
   [/英伟达|NVIDIA|NIM/, '显卡厂商的模型服务'],
-  [/Oracle/, '海外老牌云'],
+  [/Oracle/, '海外云厂商'],
   [/云知声/, '语音云服务'],
   [/阶跃|StepFun|StepAudio/, '多模态大模型'],
-  [/蚂蚁|百灵|Ling-|支付宝|PAYTHON/, '支付巨头旗下大模型'],
-  [/微信|小程序/, '国民级社交App'],
+  [/蚂蚁|百灵|Ling-|支付宝|PAYTHON/, '大模型官方 · 对话'],
+  [/微信|小程序/, '小程序生态 AI'],
   [/熙娱|xiyu/i, '第三方积分平台'],
   [/MonkeyCode/i, '开源云端开发平台'],
   [/CodeGeeX/i, '开源补全插件'],
@@ -237,19 +237,16 @@ ctx.fillStyle = '#8b98b8'
 ctx.font = F(30)
 ctx.fillText('信息汇总 · 规则以官方页面为准', 82, 352)
 
-// 数据条
+// 数据条（2026-11-19 起不再展示跨平台统计：68/63/77 这类「覆盖平台 N 个」会被读成聚合其他平台）
+// 改为一行中性说明，无数字、无平台数
 ctx.fillStyle = 'rgba(255,94,140,.13)'
 roundRect(ctx, 82, 396, 916, 112, 18); ctx.fill()
-const stats = [['进行中活动', actives.length], ['覆盖平台', platCnt], ['收录总数', activities.length]]
-stats.forEach(([label, val], i) => {
-  const x = 82 + 36 + i * 300
-  ctx.fillStyle = '#ffffff'
-  ctx.font = F(44, '800')
-  ctx.fillText(String(val), x, 458)
-  ctx.fillStyle = '#8b98b8'
-  ctx.font = F(23)
-  ctx.fillText(label, x, 490)
-})
+ctx.fillStyle = '#ffffff'
+ctx.font = F(34, '800')
+ctx.fillText('每天早上更新 · 只收官方公开活动', 118, 448)
+ctx.fillStyle = '#8b98b8'
+ctx.font = F(24)
+ctx.fillText('额度与规则以各家官方页面为准', 118, 486)
 
 // 「今天值得领」6 条
 ctx.fillStyle = '#ff5e8c'
@@ -378,14 +375,14 @@ ctx.fillStyle = '#ffb3c8'
 ctx.font = F(24)
 ctx.fillText(showReal ? '💬 更多免费额度见置顶评论' : '💬 编号对应哪家？见置顶评论', 122, fy + 84)
 
-// 免责（无链接）+ 自有开源项目水印（不写平台外链，仅署名）
+// 免责（无链接、无「各平台」等聚合表述）+ 中文署名水印（不用英文站名）
 ctx.fillStyle = '#5b6780'
 ctx.font = F(20)
-ctx.fillText('仅收录各平台官方公开免费活动 · 规则以官方页面为准', 82, 1424)
+ctx.fillText('只收官方公开活动 · 规则以官方页面为准', 82, 1424)
 ctx.textAlign = 'right'
 ctx.fillStyle = '#5b6780'
 ctx.font = F(18)
-ctx.fillText('开源同步 · ai-freebie-radar', 998, 1424)
+ctx.fillText('每日整理', 998, 1424)
 ctx.textAlign = 'left'
 
 return { buf: canvas.toBuffer('image/png'), picks }
