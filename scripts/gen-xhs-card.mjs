@@ -56,7 +56,7 @@ const POS = [
   [/360|纳米/, 'AI 办公助手'],
   [/小米|MiMo/, '手机端 AI 助手'],
   [/Qwen\s*Code/i, '开源终端编程 Agent'],
-  [/OpenCode/i, '免费模型池编程客户端'],
+  [/OpenCode/i, '模型池编程客户端'],
   [/阿里|百炼|DashScope|通义|千问|Qwen|Qoder|云工开物|万相/, '头部云厂商 · 多模型 API'],
   [/腾讯|混元|TokenHub|ADP|Cloud\s*Studio|EdgeOne|元器|WorkBuddy|CodeBuddy|BuddyOne/, '云厂商 · 模型与算力'],
   [/字节|豆包|即梦|Dreamina|火山|方舟|Seedance|Trae/, '云厂商 · 视频生成'],
@@ -154,6 +154,16 @@ function sanitize(s) {
     .replace(/注册\s*(\d+)\s*永久积分/g, '$1 积分（永久）')
     .replace(/新手任务/g, '任务奖励')
     .replace(/免费试用/g, '体验')
+    // 2026-11-19 图片违规复盘后新增：把新条目里带进来的促销/领取/折扣/截止日字样中性化
+    .replace(/免费体验额度/g, '体验额度')
+    .replace(/免费额度/g, '体验额度')
+    .replace(/免费层/g, '基础层')
+    .replace(/登录可领/g, '登录后可用')
+    .replace(/可领/g, '可用')
+    .replace(/\d+折起/g, '')
+    .replace(/实测cost=0、?/gi, '')
+    .replace(/池至\d{1,2}[-月]\d{1,2}日?/g, '')
+    .replace(/\s*\+\s*(?=[）)]|$)/g, '')
     .replace(/限时免费/g, '限定期限内可用')
     .replace(/白送|白嫖/g, '')
     .replace(/（\s*99元套餐\s*）|\(\s*99元套餐\s*\)/g, '')
