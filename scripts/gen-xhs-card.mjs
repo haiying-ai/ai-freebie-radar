@@ -55,6 +55,8 @@ const POS = [
   [/华为|CodeArts|码道/, '通信大厂 · 国产算力'],
   [/360|纳米/, '安全软件起家的AI办公'],
   [/小米|MiMo/, '手机厂旗下AI'],
+  [/Qwen\s*Code/i, '开源终端编程 Agent'],
+  [/OpenCode/i, '免费模型池编程客户端'],
   [/阿里|百炼|DashScope|通义|千问|Qwen|Qoder|云工开物|万相/, '头部云厂商 · 通义系'],
   [/腾讯|混元|TokenHub|ADP|Cloud\s*Studio|EdgeOne|元器|WorkBuddy|CodeBuddy|BuddyOne/, '社交巨头旗下云'],
   [/字节|豆包|即梦|Dreamina|火山|方舟|Seedance|Trae/, '短视频巨头旗下云'],
