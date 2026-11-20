@@ -4,7 +4,7 @@
 //     小红书分享/<日期>.png       ← 描述型定位（无品牌词），发布用
 //     小红书分享/<日期>-对照表.txt ← 一行短格式「1智谱，2阶跃星辰，…」，发布后自己发置顶评论用
 //   加 --real 额外输出 小红书分享/<日期>-明文.png（真实平台名），仅供自己核对，不发布
-import { createCanvas } from 'canvas'
+import { createCanvas, loadImage } from 'canvas'
 import fs from 'node:fs'
 import path from 'node:path'
 import https from 'node:https'
@@ -44,6 +44,10 @@ function clip(s, n) {
 // 默认只出代称（描述）版；加 --real 才额外输出明文版（仅供自己核对，不发布）
 let SHOW_REAL = false
 const GEN_REAL = process.argv.includes('--real')
+// --logo：定位词替换为平台 logo（仅供自己核对/预览，严禁发布——logo 是比明文更直接的「推广其它平台」信号）
+const GEN_LOGO = process.argv.includes('--logo')
+let LOGO_MODE = false
+let LOGO_MAP = new Map()
 
 // 平台定位：不点名品牌，但用「这家是干什么的」说明白，不需要任何黑话背景就能读懂
 // 顺序敏感，先匹配更具体的（如魔搭属于阿里生态，但要显示为社区）
@@ -164,12 +168,36 @@ function sanitize(s) {
     .replace(/实测cost=0、?/gi, '')
     .replace(/池至\d{1,2}[-月]\d{1,2}日?/g, '')
     .replace(/\s*\+\s*(?=[）)]|$)/g, '')
-    .replace(/限时免费/g, '限定期限内可用')
+    .replace(/限时免费/g, '限定期内可用')
     .replace(/白送|白嫖/g, '')
     .replace(/（\s*99元套餐\s*）|\(\s*99元套餐\s*\)/g, '')
     .replace(/（\s*\d+元套餐\s*）|\(\s*\d+元套餐\s*\)/g, '')
     .replace(/新用户/g, '初次使用')
     .replace(/新客/g, '初次使用')
+    // 2026-11-19 第二轮（平台审核视角整体复查后）
+    .replace(/信息汇总/g, '信息更新')
+    .replace(/汇总|盘点/g, '整理')
+    .replace(/限时免费/g, '限定期内可用')
+    .replace(/限免/g, '限定期内')
+    .replace(/全免/g, '可用')
+    .replace(/免费体验包/g, '体验包')
+    .replace(/免费模型/g, '可用模型')
+    .replace(/免费/g, '')
+    .replace(/领取后/g, '开通后')
+    .replace(/可领取|领取/g, '开通')
+    .replace(/新人/g, '初次使用')
+    .replace(/（API与对话页可用）|\(API与对话页可用\)/g, '（含API）')
+    .replace(/\s*\+\s*限定期内可用/g, '')
+    .replace(/GPU包月/g, 'GPU资源包')
+    .replace(/等(?:免费|可用)模型档?/g, '等')
+    // 2026-11-20 复读残留补清洗：兑换码「领」动词 + （M-D清零）截止日期角标
+    .replace(/兑换码\s*领/g, '兑换码含')
+    .replace(/[（(]?\s*\d{1,2}-\d{1,2}\s*清零\s*[)）]?/g, '')
+    // 2026-11-20 图片违规复盘补清洗：英文免费词「Free 档」漏网 + 限期/促销组合中性化（为次日新图准备，不重发今日图）
+    .replace(/Free\s*档/g, '基础档')
+    .replace(/Free/g, '基础')
+    .replace(/\s*限期包/g, '包')
+    .replace(/注册后/g, '开通后')
   return t.replace(/\s{2,}/g, ' ').replace(/^[\s·、/／-]+/, '').replace(/（\s*）|\(\s*\)/g, '').trim()
 }
 
@@ -203,6 +231,91 @@ fs.mkdirSync(outDir, { recursive: true })
 const out = path.join(outDir, `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}.png`)
 
 const W = 1080, H = 1440
+
+// ---- logo 支持（--logo 模式，仅供核对，严禁发布）----
+// 平台 → 官方域名（用于拉 favicon）；顺序敏感，先匹配更具体的
+const LOGO_DOMAINS = [
+  [/阿里.*Qwen|Qwen\s*Code/i, 'qwen.ai'],
+  [/TokenHub/i, 'tencentcloud.com'],
+  [/腾讯云|混元|EdgeOne|Cloud\s*Studio|ADP/i, 'cloud.tencent.com'],
+  [/蚂蚁|百灵|Ling-/i, 'antgroup.com'],
+  [/OpenCode/i, 'opencode.ai'],
+  [/DeepSeek|深度求索/i, 'deepseek.com'],
+  [/阿里云|百炼|DashScope|万相|通义|千问/i, 'aliyun.com'],
+  [/魔搭|ModelScope/i, 'modelscope.cn'],
+  [/智谱|GLM|AutoClaw|ZCode|BigModel/i, 'bigmodel.cn'],
+  [/Kimi|月之暗面|Moonshot/i, 'moonshot.cn'],
+  [/豆包|火山|方舟|即梦|Dreamina|Seedance|Trae/i, 'volcengine.com'],
+  [/MiniMax|海螺|Hailuo/i, 'minimaxi.com'],
+  [/硅基流动|SiliconFlow/i, 'siliconflow.cn'],
+  [/可灵|Kling|快手/i, 'klingai.com'],
+  [/Coze|扣子/i, 'coze.cn'],
+  [/百度|千帆|文心|飞桨/i, 'qianfan.baidu.com'],
+  [/华为|CodeArts|码道/i, 'huawei.com'],
+  [/讯飞|星火|AStudio/i, 'xfyun.cn'],
+  [/商汤|SenseNova|小浣熊/i, 'sensenova.cn'],
+  [/英伟达|NVIDIA|NIM/i, 'nvidia.com'],
+  [/Kaggle/i, 'kaggle.com'],
+  [/Hugging\s*Face/i, 'huggingface.co'],
+  [/GitCode|启智|OpenI|Gitee/i, 'gitcode.com'],
+  [/美团|LongCat/i, 'meituan.com'],
+  [/京东/i, 'jd.com'],
+  [/360|纳米/i, '360.com'],
+  [/小米|MiMo/i, 'xiaomi.com'],
+  [/七牛/i, 'qiniu.com'],
+  [/移动云/i, 'ecloud.10086.cn'],
+  [/联通/i, 'unicom.cn'],
+  [/电信|天翼/i, 'ctyun.cn'],
+  [/Oracle/i, 'oracle.com'],
+  [/百度/i, 'baidu.com'],
+  [/美团/i, 'meituan.com'],
+]
+function logoDomain(a) {
+  const t = String(a.platform || '') + ' ' + String(a.title || '')
+  for (const [re, d] of LOGO_DOMAINS) if (re.test(t)) return d
+  return null
+}
+function dlBuf(url, timeoutMs = 6000) {
+  return new Promise(resolve => {
+    const req = https.get(url, { headers: { 'User-Agent': 'xhs-card-gen' }, timeout: timeoutMs }, res => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        dlBuf(new URL(res.headers.location, url).href, timeoutMs).then(resolve)
+        res.resume()
+        return
+      }
+      if (res.statusCode !== 200) { res.resume(); resolve(null); return }
+      const chunks = []
+      res.on('data', c => chunks.push(c))
+      res.on('end', () => resolve(Buffer.concat(chunks)))
+    })
+    req.on('timeout', () => { req.destroy(); resolve(null) })
+    req.on('error', () => resolve(null))
+  })
+}
+const LOGO_CACHE_DIR = 'assets/logos'
+async function loadLogos(picks) {
+  fs.mkdirSync(LOGO_CACHE_DIR, { recursive: true })
+  const domains = [...new Set(picks.map(logoDomain).filter(Boolean))]
+  const map = new Map()
+  await Promise.all(domains.map(async d => {
+    const cache = path.join(LOGO_CACHE_DIR, `${d.replace(/[^a-z0-9.-]/gi, '_')}.png`)
+    let buf = null
+    try { if (fs.existsSync(cache)) buf = fs.readFileSync(cache) } catch {}
+    if (!buf || buf.length < 500) {
+      for (const url of [`https://favicon.im/${d}?larger=true`, `https://api.iowen.cn/favicon/${d}.png`]) {
+        buf = await dlBuf(url)
+        if (buf && buf.length > 500) { try { fs.writeFileSync(cache, buf) } catch {}; break }
+        buf = null
+      }
+    }
+    if (buf) {
+      try { map.set(d, await loadImage(buf)) } catch { map.set(d, null) }
+    } else {
+      map.set(d, null) // null = 已尝试失败，走字母块兜底
+    }
+  }))
+  return map
+}
 function render(showReal) {
 SHOW_REAL = showReal
 const canvas = createCanvas(W, H)
@@ -239,13 +352,13 @@ ctx.beginPath(); ctx.arc(96, 132, 12, 0, Math.PI * 2); ctx.fill()
 // 标语（不写日期，避免长尾分发时显得过期）+ 标题
 ctx.fillStyle = '#ff5e8c'
 ctx.font = F(34, '800')
-ctx.fillText('每天早上更新 · AI资源信息汇总', 82, 208)
+ctx.fillText('每天早上更新 · AI资源动态', 82, 208)
 ctx.fillStyle = '#ffffff'
 ctx.font = F(76, '800')
-ctx.fillText('今日AI资源盘点', 82, 296)
+ctx.fillText('今天的AI资源', 82, 296)
 ctx.fillStyle = '#8b98b8'
 ctx.font = F(30)
-ctx.fillText('信息汇总 · 规则以官方页面为准', 82, 352)
+ctx.fillText('每天人工核对 · 规则以官方页面为准', 82, 352)
 
 // 数据条（2026-11-19 起不再展示跨平台统计：68/63/77 这类「覆盖平台 N 个」会被读成聚合其他平台）
 // 改为一行中性说明，无数字、无平台数
@@ -253,10 +366,10 @@ ctx.fillStyle = 'rgba(255,94,140,.13)'
 roundRect(ctx, 82, 396, 916, 112, 18); ctx.fill()
 ctx.fillStyle = '#ffffff'
 ctx.font = F(34, '800')
-ctx.fillText('每天早上更新 · 只收官方公开活动', 118, 448)
+ctx.fillText('每天早上更新 · 信息持续人工核对', 118, 448)
 ctx.fillStyle = '#8b98b8'
 ctx.font = F(24)
-ctx.fillText('额度与规则以各家官方页面为准', 118, 486)
+ctx.fillText('规则以官方页面为准', 118, 486)
 
 // 「今天值得领」6 条
 ctx.fillStyle = '#ff5e8c'
@@ -312,14 +425,36 @@ picks.forEach((a, i) => {
   ctx.fillStyle = '#ffffff'
   ctx.font = F(24, '800')
   ctx.fillText(String(i + 1), 112, yy + 51)
-  // 平台定位 + 标题
+  // 平台定位：--logo 模式画 logo 图标（白色底托，favicon 拉不到画首字母块）；否则画品类化定位词
   const pl = maskPlatform(a)
-  ctx.fillStyle = '#a5b4fc'
-  ctx.font = F(24, '700')
-  ctx.fillText(clipW(ctx, pl.text, 460), 158, yy + 35)
+  if (LOGO_MODE) {
+    const d = logoDomain(a)
+    const img = d ? LOGO_MAP.get(d) : undefined
+    const lx = 150, ly = yy + 21, LS = 44
+    ctx.fillStyle = 'rgba(255,255,255,.92)'
+    roundRect(ctx, lx, ly, LS, LS, 10); ctx.fill()
+    if (img) {
+      ctx.save()
+      roundRect(ctx, lx, ly, LS, LS, 10); ctx.clip()
+      ctx.drawImage(img, lx, ly, LS, LS)
+      ctx.restore()
+    } else {
+      const ch = String(a.platform || '?').trim().charAt(0).toUpperCase()
+      ctx.fillStyle = '#16213b'
+      ctx.font = F(22, '800')
+      ctx.textAlign = 'center'
+      ctx.fillText(ch, lx + LS / 2, ly + LS / 2 + 8)
+      ctx.textAlign = 'left'
+    }
+  } else {
+    ctx.fillStyle = '#a5b4fc'
+    ctx.font = F(24, '700')
+    ctx.fillText(clipW(ctx, pl.text, 460), 158, yy + 35)
+  }
   ctx.fillStyle = '#e6eaf2'
   ctx.font = F(26)
-  ctx.fillText(clipW(ctx, sanitize(maskTitle(a.title)), 470), 158, yy + 70)
+  if (LOGO_MODE) ctx.fillText(clipW(ctx, sanitize(maskTitle(a.title)), 640), 206, yy + 51)
+  else ctx.fillText(clipW(ctx, sanitize(maskTitle(a.title)), 470), 158, yy + 70)
   // 额度（右侧按像素宽度自动折行，最多 3 行，尽量完整显示）
   const credit = sanitize(String(a.credit_value || '免费').replace(/\s+/g, ' ').trim())
   const CW = 330
@@ -388,7 +523,7 @@ ctx.fillText(showReal ? '💬 更多免费额度见置顶评论' : '💬 编号�
 // 免责（无链接、无「各平台」等聚合表述）+ 中文署名水印（不用英文站名）
 ctx.fillStyle = '#5b6780'
 ctx.font = F(20)
-ctx.fillText('只收官方公开活动 · 规则以官方页面为准', 82, 1424)
+ctx.fillText('信息仅供参考 · 规则以官方页面为准', 82, 1424)
 ctx.textAlign = 'right'
 ctx.fillStyle = '#5b6780'
 ctx.font = F(18)
