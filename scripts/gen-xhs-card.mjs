@@ -203,6 +203,9 @@ function sanitize(s) {
     .replace(/\s*[¥￥]\s*0/g, '')
     .replace(/0元(?=长期|不限量|免费)/g, '')
     .replace(/限定期内期内/g, '限定期内')
+    // 2026-11-24 复读残留补清洗：领取动词「申领」、促销词「代金券」中性化
+    .replace(/申领/g, '可用')
+    .replace(/代金券/g, '券')
   return t.replace(/\s{2,}/g, ' ').replace(/^[\s·、/／-]+/, '').replace(/（\s*）|\(\s*\)/g, '').trim()
 }
 
