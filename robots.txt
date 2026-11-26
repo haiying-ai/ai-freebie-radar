@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://ai-credit-hub-44763.app.workbuddy.host/sitemap.xml
