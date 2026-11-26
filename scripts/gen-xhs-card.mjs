@@ -206,6 +206,8 @@ function sanitize(s) {
     // 2026-11-24 复读残留补清洗：领取动词「申领」、促销词「代金券」中性化
     .replace(/申领/g, '可用')
     .replace(/代金券/g, '券')
+    // 2026-11-26 复读残留补清洗：新入库 Miora 标题的「注册送」领取动词中性化
+    .replace(/注册送/g, '含')
   return t.replace(/\s{2,}/g, ' ').replace(/^[\s·、/／-]+/, '').replace(/（\s*）|\(\s*\)/g, '').trim()
 }
 
